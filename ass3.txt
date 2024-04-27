@@ -1,0 +1,28 @@
+import pandas as pd
+import numpy as np
+from sklearn.preprocessing import MinMaxScaler
+from keras.models import Sequential
+from keras.layers import LSTM, Dense
+df = pd.read_csv('GOOGL.csv')
+scaler = MinMaxScaler()
+scaled_data = scaler.fit_transform(df['Close'].values.reshape(-1, 1))
+def create_sequences(data, time_steps=6):
+x, y = [], []
+for i in range(len(data) - time_steps):
+x.append(data[i:i+time_steps])
+y.append(data[i+time_steps, 0])
+return np.array(x), np.array(y)
+x, y = create_sequences(scaled_data)
+model = Sequential([LSTM(50, activation="relu", input_shape=(x.shape[1], 1)),
+Dense(1, activation="linear")
+])
+model.compile(optimizer='adam', loss='mae')
+model.fit(x, y, epochs=10, validation_split=0.1)
+last_day_price = df['Close'].values[-1]
+last_6_days = df['Close'][-6:].values.reshape(-1, 1)
+last_6_days_scaled = scaler.transform(last_6_days)
+x_test = last_6_days_scaled.reshape((1, 6, 1))
+y_pred = model.predict(x_test)
+y_pred= scaler.inverse_transform(y_pred)
+print('Actual price for the last day:', last_day_price)
+print('Predicted price for the last day:', y_pred)

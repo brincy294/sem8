@@ -1,0 +1,34 @@
+import numpy as np
+import pandas as pd
+df = pd.read_csv('HousingData.csv',na_values='NA')
+df.head()
+df.isna().sum()
+df.describe()
+for i in df.columns:
+mean_value = df[i].mean()
+df[i].fillna(mean_value, inplace=True)
+df.isna().sum()
+df.head()
+from sklearn.model_selection import train_test_split
+X = df.loc[:, df.columns != 'MEDV']
+y = df.loc[:, df.columns == 'MEDV']
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=123)
+from sklearn.preprocessing import MinMaxScaler
+mms = MinMaxScaler()
+mms.fit(X_train)
+X_train = mms.transform(X_train)
+X_test = mms.transform(X_test)
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+model = Sequential()
+model.add(Dense(128, input_shape=(13, ), activation='relu', name='dense_1'))
+model.add(Dense(64, activation='relu', name='dense_2'))
+model.add(Dense(1, activation='linear', name='dense_output'))
+model.compile(optimizer='adam', loss='mse', metrics=['mae'])
+model.summary()
+history = model.fit(X_train, y_train, epochs=100, validation_split=0.05, verbose = 1)
+mse_nn, mae_nn = model.evaluate(X_test, y_test)
+print('Mean squared error on test data: ', mse_nn)
+print('Mean absolute error on test data: ', mae_nn)
+4/26/24, 6:41 PM Untitled5.ipynb - Colab
+https://colab.research.google.com/drive/16LuBoJA1fh-x9VHGLPPBHazGys9HXbj1#scrollTo=r77UOD8dhk6x&printMode=true 1/1
